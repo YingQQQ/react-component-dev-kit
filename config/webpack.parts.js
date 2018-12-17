@@ -4,26 +4,6 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
 
 
-const styleOptions = path => ([
-  'style-loader',
-  {
-    loader: 'css-loader',
-    options: {
-      importLoaders: 1
-    }
-  },
-  {
-    loader: 'postcss-loader',
-    options: {
-      config: {
-        path
-      }
-    }
-  },
-  'sass-loader'
-]);
-
-
 /**
  * 页面配置，入口文件，chunks命名，favicon文件路径，生成index配置信息
  * @param {Object} param0
@@ -46,13 +26,6 @@ exports.page = ({
 } = {}) => ({
   entry,
   plugins: [
-    new FaviconsWebpackPlugin({
-      logo: favicon,
-      title,
-      icons: {
-        appleIcon: true,
-      }
-    }),
     new HtmlWebpackPlugin({
       filename: `${path && `${path}/`}index.html`,
       template,
@@ -60,10 +33,9 @@ exports.page = ({
       inject: false,
       appMountId: 'app',
       ...others
-    }),
+    })
   ]
 });
-
 
 /**
  * 用于PROD时删除之前的文件
@@ -114,4 +86,14 @@ exports.loadJavaScript = ({ include, exclude, options } = {}) => ({
  */
 exports.generateSourceMaps = () => ({
   devtool: 'eval-source-map'
+});
+
+exports.devServer = ({ host, port } = {}) => ({
+  devServer: {
+    stats: 'errors-only',
+    host, // Defaults to `localhost`
+    port, // Defaults to 8080
+    open: true,
+    overlay: true
+  }
 });

@@ -5,6 +5,7 @@ const pkg = require('./package.json');
 const { PATHS } = require('./config/path-help');
 
 const IS_DEV = process.env.NODE_ENV === 'development';
+console.log(IS_DEV);
 const browsers = ['>1%', 'last 4 versions', 'Firefox ESR', 'not ie < 9'];
 const PUBLIC_PATH = IS_DEV ? '/' : '/';
 
@@ -48,8 +49,11 @@ const commonConfig = merge([
     exclude: /node_modules/,
     options: babelConfig
   }),
-  parts.loadFonts(),
-  parts.loadImage(),
+  parts.devServer({
+    // Customize host/port here if needed
+    host: process.env.HOST,
+    port: process.env.PORT,
+  }),
 ]);
 
 const developmentConfig = merge([
@@ -59,11 +63,6 @@ const developmentConfig = merge([
       chunkFilename: '[chunkhash].js'
     }
   },
-  parts.loadCSS({
-    include: PATHS.app,
-    exclude: /node_modules/,
-    path: PATHS.postcss
-  }),
   parts.generateSourceMaps,
   parts.setFreeVariable('__DEVELOPMENT__', 'true'),
 ]);
@@ -86,13 +85,6 @@ const productionConfig = merge([
     }
   },
   parts.clean(PATHS.build),
-  parts.minifyJavaScript(),
-  parts.minifyCSS(),
-  parts.extractCSS({
-    include: PATHS.app,
-    exclude: /node_modules/,
-    path: PATHS.postcss
-  }),
   {
     optimization: {
       minimize: true,
