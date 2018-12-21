@@ -1,8 +1,8 @@
 import React from 'react';
 import { render } from 'react-dom';
 
-import LoadMore from './LoadMore';
+import App from './App';
 
 const rootEl = window.document.getElementById('app');
 
-render(<LoadMore color="yellow" />, rootEl);
+render(<App />, rootEl);
