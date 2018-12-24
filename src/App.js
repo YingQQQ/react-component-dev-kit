@@ -37,16 +37,18 @@ class App extends Component {
 
   refresh = (resolve, reject) => {
     const { canRefreshResolve } = this.state;
-    if (!canRefreshResolve) reject();
-    else {
-      this.setState({
-        listLen: 17,
-        hasMore: 1,
-        refreshedAt: Date.now()
-      });
-      resolve();
-      // reject();
-    }
+    setTimeout(() => {
+      if (!canRefreshResolve) reject();
+      else {
+        this.setState({
+          listLen: 17,
+          hasMore: 1,
+          refreshedAt: Date.now()
+        }, () => {
+          resolve();
+        });
+      }
+    }, 2e3);
   };
 
   loadMore = (resolve) => {
@@ -90,7 +92,11 @@ class App extends Component {
     }
     return (
       <>
-        <LoadMore hasMore={hasMore} onLoadMore={this.loadMore} onRefresh={this.refresh}>
+        <LoadMore
+          hasMore={hasMore}
+          // onLoadMore={this.loadMore}
+          onRefresh={this.refresh}
+        >
           <Wrapper>{list}</Wrapper>
         </LoadMore>
       </>

@@ -7,21 +7,41 @@ import { listen } from './events';
 const pullingMsg = '下拉刷新';
 const pullingEnoughMsg = '松开刷新';
 const refreshedMsg = '刷新成功';
+const refreshingMsg = '正在刷新...';
 const Height = '40px';
 const fontColor = '#999';
 
-// const refreshed = keyframes`
-//   0% {
-//     transform: translate3d(0, ${refreshedHeight}, 0);
-//   }
-//   50% {
-//     transform: translate3d(0, ${refreshedHeight}, 0);
-//   }
-// `;
+const content = (loaderState) => {
+  switch (loaderState) {
+    case 'pulling':
+      return pullingMsg;
+    case 'pullEnough':
+      return pullingEnoughMsg;
+    case 'refreshing':
+      return refreshingMsg;
+    case 'refreshed':
+      return refreshedMsg;
+    default:
+      return null;
+  }
+};
 
-// const refreshedRule = css`
-//   ${refreshed} 1.2s infinite ease-in-out both;
-// `;
+
+const refreshed = keyframes`
+  0% {
+    transform: translate3d(0, ${Height}, 0);
+  }
+  50% {
+    transform: translate3d(0, ${Height}, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+`;
+
+const refreshedRule = time => css`
+  ${refreshed} ${time}s;
+`;
 
 /*
   * 标明了top和bottom滑动的就是View而不再是document.body,
@@ -50,6 +70,7 @@ const Wrapper = styled.div`
   flex: 1;
   overflow-x: hidden;
   overflow-y: scroll;
+  opacity: 1;
   -webkit-overflow-scrolling: touch; // enhance ios scrolling
 `;
 
@@ -66,12 +87,17 @@ const Main = styled.div.attrs({
 })`
   margin-top: -1px;
   padding-top: 1px;
+  transition: transform 0.2s;
+  .loader-refreshed & {
+    animation: ${refreshedRule(0.4)}
+  }
+  .state-reset & {
+    transition: transform 0.2s;
+  }
 `;
 
 const LoaderMsg = styled.div`
   line-height: ${Height};
-  // opacity: ${props => (props.loaderState === 'refreshing' ? 0 : 1)};
-  // height: ${props => (props.loaderState === 'refreshing' ? 0 : null)};
   ${props => (props.loaderState === 'refreshed' ? `
   i {
     display: inline-block;
@@ -84,7 +110,6 @@ const LoaderMsg = styled.div`
     border: 1px solid;
     border-radius: 100%;
     position: relative;
-
     &:before {
       content: '';
       position: absolute;
@@ -97,7 +122,6 @@ const LoaderMsg = styled.div`
       transform: rotate(40deg);
       }
     }
-  }
   
   ` : `
   i {
@@ -132,7 +156,6 @@ const LoaderMsg = styled.div`
   }`)}
 `;
 
-// const pullingMsg = '下拉刷新';
 
 const LoaderSymbol = styled.div`
   position: absolute;
@@ -141,9 +164,10 @@ const LoaderSymbol = styled.div`
   right: 0;
   color: ${fontColor};
   text-align: center;
-  height: ${Height};
+  opacity: 1;
+  height: ${props => (content(props.loaderState) ? `${Height}` : 0)};
   overflow: hidden;
-  display: ${props => (props.pullHeight ? 'block' : 'none')};
+  display: ${props => (content(props.loaderState) ? 'block' : 'none')};
 `;
 
 const Footer = styled.div`
@@ -178,24 +202,11 @@ const UiLoading = styled.i`
   font-size: 12px;
   width: 1em;
   height: 1em;
-  border: 2px solid darken($bg-dark, 30%);
+  border: 2px solid rgba(162, 162, 162, 0.6);
   border-top-color: rgba(255,255,255,0.4);
   border-radius: 100%;
   animation: ${circleRule};
 `;
-
-const content = (loaderState) => {
-  switch (loaderState) {
-    case 'pulling':
-      return pullingMsg;
-    case 'pullEnough':
-      return pullingEnoughMsg;
-    case 'refreshed':
-      return refreshedMsg;
-    default:
-      return null;
-  }
-};
 
 const STATUS = {
   init: '',
@@ -351,19 +362,17 @@ class LoadMore extends Component {
       this.setState(() => ({
         loaderState: STATUS.refreshing,
       }), () => {
+        onRefresh(
+          () => {
+            console.log('refreshed');
+            this.setState(() => ({
+              loaderState: STATUS.refreshed,
+            }), () => {
+              this.setState(endState);
+            });
+          }
+        );
       });
-      onRefresh(
-        () => {
-          console.log('refreshed');
-          this.setState(() => ({
-            loaderState: STATUS.refreshed,
-            pullHeight: 0
-          }));
-        },
-        () => {
-          this.setState(endState);
-        },
-      );
       return;
     }
     this.setState(endState);
@@ -398,7 +407,7 @@ class LoadMore extends Component {
     const transform = {
       transform: pullHeight ? `translate3d(0, ${pullHeight}px,0)` : null
     };
-    console.log(loaderState);
+
     return (
       <View>
         <Content
@@ -413,7 +422,7 @@ class LoadMore extends Component {
               <span>{content(loaderState)}</span>
             </LoaderMsg>
           </LoaderSymbol>
-          <Main style={transform}>
+          <Main style={transform} loaderState={loaderState}>
             {children}
           </Main>
           <Footer hasMore={hasMore}>
