@@ -20,8 +20,6 @@ class App extends Component {
       canRefreshResolve: 1,
       listLen: 0,
       hasMore: 0,
-      initializing: 1,
-      refreshedAt: Date.now()
     };
   }
 
@@ -30,7 +28,6 @@ class App extends Component {
       this.setState({
         listLen: 17,
         hasMore: 1,
-        initializing: 2 // initialized
       });
     }, 2e3);
   }
@@ -43,7 +40,6 @@ class App extends Component {
         this.setState({
           listLen: 17,
           hasMore: 1,
-          refreshedAt: Date.now()
         }, () => {
           resolve();
         });
@@ -75,14 +71,11 @@ class App extends Component {
     const {
       listLen,
       hasMore,
-      initializing,
-      refreshedAt,
-      canRefreshResolve
     } = this.state;
     const list = [];
 
     if (listLen) {
-      for (let i = 0; i < listLen; i++) {
+      for (let i = 0; i < listLen; i += 1) {
         list.push(
           <li key={i}>
             <p>{i}</p>
@@ -94,7 +87,7 @@ class App extends Component {
       <>
         <LoadMore
           hasMore={hasMore}
-          // onLoadMore={this.loadMore}
+          onLoadMore={this.loadMore}
           onRefresh={this.refresh}
         >
           <Wrapper>{list}</Wrapper>

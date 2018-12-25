@@ -26,23 +26,6 @@ const content = (loaderState) => {
   }
 };
 
-
-const refreshed = keyframes`
-  0% {
-    transform: translate3d(0, ${Height}, 0);
-  }
-  50% {
-    transform: translate3d(0, ${Height}, 0);
-  }
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-`;
-
-const refreshedRule = time => css`
-  ${refreshed} ${time}s;
-`;
-
 /*
   * 标明了top和bottom滑动的就是View而不再是document.body,
   * hidden去除wrap层的滚动条，确保只有scrol层有滚动条
@@ -75,7 +58,7 @@ const Wrapper = styled.div`
 `;
 
 const Content = styled(Wrapper)`
-  // overflow: ${props => (props.loaderState ? 'hidden !important' : 'none')};
+  // overflow: ${props => (props.loaderState === 'loading' ? 'hidden !important' : 'none')};
 `;
 
 
@@ -88,12 +71,6 @@ const Main = styled.div.attrs({
   margin-top: -1px;
   padding-top: 1px;
   transition: transform 0.2s;
-  .loader-refreshed & {
-    animation: ${refreshedRule(0.4)}
-  }
-  .state-reset & {
-    transition: transform 0.2s;
-  }
 `;
 
 const LoaderMsg = styled.div`
@@ -171,12 +148,10 @@ const LoaderSymbol = styled.div`
 `;
 
 const Footer = styled.div`
-  margin-top: -1px;
-  padding-top: 1px;
+  display: ${props => (props.loaderState === 'loading' && props.hasMore ? 'block' : 'none')};
 `;
 
 const Loading = styled.div`
-    // display: none;
     text-align: center;
     line-height: ${Height};
     color: #999;
@@ -281,6 +256,9 @@ class LoadMore extends Component {
 
   loadMore = () => {
     const { onLoadMore } = this.props;
+    this.setState(() => ({
+      loaderState: STATUS.loading
+    }));
     onLoadMore(() => {
       this.setState(
         () => ({
@@ -362,25 +340,21 @@ class LoadMore extends Component {
       this.setState(() => ({
         loaderState: STATUS.refreshing,
       }), () => {
-        onRefresh(
-          () => {
-            console.log('refreshed');
-            this.setState(() => ({
-              loaderState: STATUS.refreshed,
-            }), () => {
-              this.setState(endState);
-            });
-          }
-        );
+        this.setState(() => ({
+          loaderState: STATUS.refreshed,
+        }));
       });
+
+      onRefresh(
+        () => {
+          this.setState(endState);
+        }
+      );
+
       return;
     }
     this.setState(endState);
   };
-
-  handleOnAnimationEnd = (e) => {
-    console.log(e);
-  }
 
   handleOnScroll = () => {
     const { hasMore } = this.props;
@@ -402,12 +376,12 @@ class LoadMore extends Component {
       onTouchMove: this.handleTouchMove,
       onTouchEnd: this.handleTouchEnd,
       onScroll: this.handleOnScroll,
-      onAnimationEnd: this.handleOnAnimationEnd
     };
     const transform = {
       transform: pullHeight ? `translate3d(0, ${pullHeight}px,0)` : null
     };
 
+    console.log(loaderState);
     return (
       <View>
         <Content
@@ -416,7 +390,7 @@ class LoadMore extends Component {
           className={className}
           loaderState={loaderState}
         >
-          <LoaderSymbol pullHeight={pullHeight} loaderState={loaderState}>
+          <LoaderSymbol loaderState={loaderState}>
             <LoaderMsg loaderState={loaderState}>
               <i />
               <span>{content(loaderState)}</span>
@@ -425,7 +399,7 @@ class LoadMore extends Component {
           <Main style={transform} loaderState={loaderState}>
             {children}
           </Main>
-          <Footer hasMore={hasMore}>
+          <Footer hasMore={hasMore} loaderState={loaderState}>
             <Loading>
               <UiLoading />
             </Loading>
